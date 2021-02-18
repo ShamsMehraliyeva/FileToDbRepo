@@ -102,13 +102,10 @@
                         { "data": "ReconciliationCurrency" },
                         {
                             "data": "Id", "render": function (data) {
-                                return "<a class='btn btn-outline-primary' onclick=PopupForm('@Url.Action("TransactionDetailsPartial", "Home")'," + data + ") >Ətraflı</a>";
-                 ],
-                 "drawCallback": function (settings) {
-                     // Here the response
-                     var response = settings.json;
-                     console.log(response);
-                 },
+                                return "<a class='btn btn-outline-primary' onclick=PopupForm('@Url.Action("TransactionDetailsPartial", "Home")'," + data + ") >Ətraflı</a>"
+                            }
+                        }
+                 ]
 
             })
         }

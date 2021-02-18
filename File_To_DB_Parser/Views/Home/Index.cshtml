@@ -1,0 +1,232 @@
+﻿
+@{
+    ViewBag.Title = "Home Page";
+}
+
+
+@section styles
+{
+
+}
+<div class="card">
+    <div class="card-header">
+        Fayl seçin
+    </div>
+    <div class="card-body">
+
+        <form method="post">
+            <div class="d-flex justify-content-around">
+                <div>
+                    <input type="file" name="file" />
+                </div>
+                <div>
+                    <input type="submit" class="btn btn-success" value="Göstər" />
+                </div>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+<hr />
+
+<div id="TransationData">
+
+</div>
+
+
+
+<div class="modal" tabindex="-1" role="dialog" id="MyModal" style="top:0;">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div id="TransactionDetailsData">
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+@section scripts{
+    <script>
+
+        //form Submit
+        $("form").submit(function (evt) {
+            evt.preventDefault();
+            showLoading('Gözleyin');
+            var formData = new FormData($(this)[0]);
+            $.ajax({
+                url: '/Home/FileUpload',
+                type: 'POST',
+                data: formData,
+                async: false,
+                cache: false,
+                contentType: false,
+                enctype: 'multipart/form-data',
+                processData: false,
+                success: function (response) {
+                    stopLoading();
+                    if (response.status == 'error') {
+                        showErrorMessage("Xəta baş verdi!", response.message);
+                        return false;
+                    }
+
+                    $("#TransationData").html(response);
+                    ShowTransactionTable();
+
+                }
+            });
+        });
+
+        function ShowTransactionTable() {
+             $("#example").DataTable({
+                "responsive": true,
+                "autoWidth": false,
+
+                  "ajax": {
+                      "url": "/Home/GetTrasactionData",
+                            "type": "GET",
+                            "datatype": "json"
+                        },
+                    "columns": [
+                        { "data": "FinancialInstitution" },
+                        { "data": "FXSettlementDate" },
+                        { "data": "ReconciliationFileID" },
+                        { "data": "TransactionCurrency" },
+                        { "data": "ReconciliationCurrency" },
+                        {
+                            "data": "Id", "render": function (data) {
+                                return "<a class='btn btn-outline-primary' onclick=PopupForm('@Url.Action("TransactionDetailsPartial", "Home")'," + data + ") >Ətraflı</a>";
+                 ],
+                 "drawCallback": function (settings) {
+                     // Here the response
+                     var response = settings.json;
+                     console.log(response);
+                 },
+
+            })
+        }
+
+        function PopupForm(url, id) {
+            $.get(url)
+                .done(function (response) {
+                    $("#TransactionDetailsData").html(response);
+                    $("#MyModal").modal("show");
+                    var dtTable = $("#example2").DataTable({
+                        "scrollY": "400px",
+                        "scrollCollapse": true,
+                        "autoWidth": false,
+
+                        "ajax": {
+                            "url": "/Home/GetTrasactionDetailsData?id=" + id,
+                            "type": "GET",
+                            "datatype": "json"
+                        },
+                        "columns": [
+                            { "data": "SettlementCategory" },
+                            { "data": "TransactionAmountCredit" },
+                            { "data": "ReconciliationAmnt" },
+                            { "data": "FeeAmountCredit" },
+                            { "data": "TransactionAmountDebit" },
+                            { "data": "ReconciliationAmntDebit" },
+                            { "data": "FeeAmountDebit" },
+                            { "data": "CountTotal" },
+                            { "data": "NetValue" },
+                        ],
+                        "footerCallback": function (row, data, start, end, display) {
+                            var api = this.api(), data;
+
+                            // converting to number to find total
+                            var intVal = function (i) {
+                                return typeof i === 'string' ?
+                                    i.replace(/[\$,]/g, '') * 1 :
+                                    typeof i === 'number' ?
+                                        i : 0;
+                            };
+
+                            // computing column Total of the complete result 
+                            var transactionAmountCredit = api
+                                .column(1)
+                                .data()
+                                .reduce(function (a, b) {
+                                    return intVal(a) + intVal(b);
+                                }, 0);
+
+                            var reconciliationAmnt = api
+                                .column(2)
+                                .data()
+                                .reduce(function (a, b) {
+                                    return intVal(a) + intVal(b);
+                                }, 0);
+
+                            var feeAmountCredit = api
+                                .column(3)
+                                .data()
+                                .reduce(function (a, b) {
+                                    return intVal(a) + intVal(b);
+                                }, 0);
+
+                            var transactionAmountDebit = api
+                                .column(4)
+                                .data()
+                                .reduce(function (a, b) {
+                                    return intVal(a) + intVal(b);
+                                }, 0);
+
+                            var reconciliationAmntDebit = api
+                                .column(5)
+                                .data()
+                                .reduce(function (a, b) {
+                                    return intVal(a) + intVal(b);
+                                }, 0);
+                            var feeAmountDebit = api
+                                .column(6)
+                                .data()
+                                .reduce(function (a, b) {
+                                    return intVal(a) + intVal(b);
+                                }, 0);
+                            var countTotal = api
+                                .column(7)
+                                .data()
+                                .reduce(function (a, b) {
+                                    return intVal(a) + intVal(b);
+                                }, 0);
+                            var netValue = api
+                                .column(8)
+                                .data()
+                                .reduce(function (a, b) {
+                                    return intVal(a) + intVal(b);
+                                }, 0);
+
+
+                            // Update footer by showing the total with the reference of the column index 
+                            $(api.column(0).footer()).html('Totals');
+                            $(api.column(1).footer()).html(transactionAmountCredit);
+                            $(api.column(2).footer()).html(reconciliationAmnt);
+                            $(api.column(3).footer()).html(feeAmountCredit);
+                            $(api.column(4).footer()).html(transactionAmountDebit);
+                            $(api.column(5).footer()).html(reconciliationAmntDebit);
+                            $(api.column(6).footer()).html(feeAmountDebit);
+                            $(api.column(7).footer()).html(countTotal);
+                            $(api.column(8).footer()).html(netValue);
+                        },
+                        orderCellsTop: true,
+                        "order": [[1, 'asc']]
+
+                       
+                    });
+
+
+
+                });
+        }
+
+    </script>
+
+}

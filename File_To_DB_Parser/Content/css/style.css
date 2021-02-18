@@ -1,0 +1,19 @@
+﻿
+footer {
+    padding-top:10px;
+    padding-left:10px;
+    width:100%;
+    bottom: 0;
+    border-top: 1px solid black;
+    margin-top:20px;
+}
+
+
+th {
+    font-size: 12px;
+}
+
+td {
+    font-size: 11px;
+}
+
